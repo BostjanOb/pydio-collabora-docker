@@ -1,0 +1,56 @@
+version: '3'
+services:
+    nginx-proxy-manager:
+        image: jc21/nginx-proxy-manager:2.0.13
+        ports:
+            - "80:80"
+            - "81:81"
+            - "443:443"
+        volumes:
+            - "./nginx-proxy.json:/app/config/production.json"
+            - "${DATA_PATH}/nginx-proxy-manager/data:/data"
+            - "${DATA_PATH}/nginx-proxy-manager/letsencrypt:/etc/letsencrypt"
+        depends_on:
+            - mysql
+        links:
+            - cells
+            - mysql
+
+    cells:
+        image: pydio/cells:1.6.1
+        restart: always
+        volumes:
+            - "${DATA_PATH}/pydio/static:/root/.config/pydio/cells/static/pydio"
+            - "${DATA_PATH}/pydio/data:/root/.config/pydio/cells/data"
+        ports:
+            - "8080:8080"
+        environment:
+            - CELLS_BIND=${DOMAIN}:8080
+            - CELLS_EXTERNAL=${DOMAIN_PROTOCOL}://${DOMAIN}
+            - CELLS_NO_SSL=1
+        depends_on:
+            - mysql
+        links:
+            - mysql
+            - collabora
+
+    collabora:
+       image: collabora/code:4.0.5.2
+       environment:
+           - domain=${DOMAIN}
+
+    mysql:
+         image: mysql:5.7.27
+         restart: always
+         environment:
+             MYSQL_ROOT_PASSWORD: P@ssw0rd
+             MYSQL_DATABASE: cells
+             MYSQL_USER: pydio
+             MYSQL_PASSWORD: pydi0
+         command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+         volumes:
+            - "${DATA_PATH}/mysqldata:/var/lib/mysql"
+            - "./initdb.sql:/docker-entrypoint-initdb.d/01-databases.sql"
+
+volumes:
+    data: {}
