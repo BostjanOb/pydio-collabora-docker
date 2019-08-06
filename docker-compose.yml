@@ -21,8 +21,7 @@ services:
         image: pydio/cells:1.6.1
         restart: always
         volumes:
-            - "${DATA_PATH}/pydio/static:/root/.config/pydio/cells/static/pydio"
-            - "${DATA_PATH}/pydio/data:/root/.config/pydio/cells/data"
+            - "${DATA_PATH}/pydio:/root/.config/pydio"
         environment:
             - CELLS_BIND=${DOMAIN}:8080
             - CELLS_EXTERNAL=${DOMAIN_PROTOCOL}://${DOMAIN}
